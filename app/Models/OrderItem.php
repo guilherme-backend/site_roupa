@@ -14,16 +14,12 @@ class OrderItem extends Model
         'product_id',
         'product_variant_id',
         'product_name',
-        'variant_size',
-        'variant_color',
-        'price',
         'quantity',
+        'price',
         'subtotal',
-    ];
-
-    protected $casts = [
-        'price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        // NOVOS CAMPOS ADICIONADOS:
+        'variant_size',  
+        'variant_color', 
     ];
 
     public function order()

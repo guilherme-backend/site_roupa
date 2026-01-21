@@ -2,238 +2,142 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use App\Services\CartService;
+use App\Services\PaymentService;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
-use App\Services\CartService;
-use App\Services\ShippingService;
-use App\Services\PaymentService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
-    protected $cartService;
-    protected $shippingService;
-    protected $paymentService;
-
-    public function __construct(
-        CartService $cartService,
-        ShippingService $shippingService,
-        PaymentService $paymentService
-    ) {
-        $this->middleware('auth');
-        $this->cartService = $cartService;
-        $this->shippingService = $shippingService;
-        $this->paymentService = $paymentService;
-    }
-
-    public function index()
+    public function index(CartService $cartService)
     {
-        if ($this->cartService->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Seu carrinho está vazio.');
+        $cart = $cartService->getCart();
+        $total = $cartService->getTotal();
+
+        if (empty($cart)) {
+            return redirect()->route('shop.index');
         }
 
-        $cart = $this->cartService->getCart();
-        $subtotal = $this->cartService->getTotal();
-
-        return view('checkout.index', compact('cart', 'subtotal'));
+        return view('checkout.index', compact('cart', 'total'));
     }
 
-    public function calculateShipping(Request $request)
+    public function process(Request $request, CartService $cartService, PaymentService $paymentService)
     {
-        $request->validate([
-            'zipcode' => 'required|string',
+        // 1. Validação
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'document' => 'required|string', 
+            'phone' => 'required|string',
         ]);
 
-        $result = $this->shippingService->calculateShipping($request->zipcode);
+        $cart = $cartService->getCart();
+        $total = $cartService->getTotal();
 
-        return response()->json($result);
-    }
-
-    public function process(Request $request)
-    {
-        $request->validate([
-            'shipping_name' => 'required|string|max:255',
-            'shipping_email' => 'required|email|max:255',
-            'shipping_phone' => 'required|string|max:20',
-            'shipping_zipcode' => 'required|string|max:9',
-            'shipping_address' => 'required|string|max:255',
-            'shipping_number' => 'required|string|max:20',
-            'shipping_complement' => 'nullable|string|max:255',
-            'shipping_neighborhood' => 'required|string|max:255',
-            'shipping_city' => 'required|string|max:255',
-            'shipping_state' => 'required|string|max:2',
-            'shipping_method' => 'required|string',
-            'shipping_cost' => 'required|numeric|min:0',
-            'shipping_days' => 'required|integer|min:0',
-            'payment_method' => 'required|in:pix,credit_card,boleto',
-        ]);
-
-        if ($this->cartService->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Seu carrinho está vazio.');
+        if (empty($cart)) {
+            return redirect()->route('shop.index')->with('error', 'Seu carrinho está vazio.');
         }
 
         try {
             DB::beginTransaction();
 
-            $cart = $this->cartService->getCart();
-            $subtotal = $this->cartService->getTotal();
-            $shippingCost = $request->shipping_cost;
-            $total = $subtotal + $shippingCost;
-
-            // Criar pedido
+            // 2. Criar o Pedido
             $order = Order::create([
-                'user_id' => Auth::id(),
+                'user_id' => auth()->id(),
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'status' => 'pending_payment',
-                'shipping_name' => $request->shipping_name,
-                'shipping_email' => $request->shipping_email,
-                'shipping_phone' => $request->shipping_phone,
-                'shipping_address' => $request->shipping_address,
-                'shipping_number' => $request->shipping_number,
-                'shipping_complement' => $request->shipping_complement,
-                'shipping_neighborhood' => $request->shipping_neighborhood,
-                'shipping_city' => $request->shipping_city,
-                'shipping_state' => $request->shipping_state,
-                'shipping_zipcode' => $request->shipping_zipcode,
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
                 'total' => $total,
-                'shipping_method' => $request->shipping_method,
-                'shipping_days' => $request->shipping_days,
-                'payment_method' => $request->payment_method,
+                'subtotal' => $total,
+                'shipping_cost' => 0,
+                'shipping_name' => $validated['name'],
+                'shipping_email' => $validated['email'],
+                'shipping_phone' => $validated['phone'],
+                'shipping_address' => 'Endereço Digital / Não informado',
+                'shipping_number' => 'S/N',
+                'shipping_neighborhood' => 'Digital',
+                'shipping_city' => 'Digital',
+                'shipping_state' => 'XX',
+                'shipping_zipcode' => '00000-000',
+                'payment_method' => 'mercadopago',
+                'shipping_method' => 'digital', 
             ]);
 
-            // Criar itens do pedido e decrementar estoque
+            // 3. Salvar os Itens do Pedido
             foreach ($cart as $item) {
-                $variant = ProductVariant::find($item['variant_id']);
+                $variantId = $item['variant_id'] ?? $item['product_variant_id'] ?? $item['id'] ?? null;
+                $sizeName = 'Único'; 
+                $colorName = null;
 
-                if (!$variant || !$variant->decrementStock($item['quantity'])) {
-                    DB::rollBack();
-                    return redirect()->back()->with('error', 'Produto indisponível: ' . $item['product_name']);
+                if ($variantId) {
+                    $variant = ProductVariant::find($variantId);
+                    if ($variant) {
+                        $sizeName = $variant->size ?? $variant->name ?? 'Único';
+                        $colorName = $variant->color ?? null;
+                    }
                 }
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
-                    'product_variant_id' => $item['variant_id'],
+                    'product_variant_id' => $variantId,
                     'product_name' => $item['product_name'],
-                    'variant_size' => $item['size'],
-                    'variant_color' => $item['color'],
-                    'price' => $item['price'],
+                    'variant_size' => $sizeName,
+                    'variant_color' => $colorName,
                     'quantity' => $item['quantity'],
+                    'price' => $item['price'],
                     'subtotal' => $item['price'] * $item['quantity'],
                 ]);
             }
 
-            // Criar preferência de pagamento no Mercado Pago
+            // 4. Preparar dados para o MP
             $paymentData = [
+                'items' => $cart,
+                'shipping_cost' => 0,
+                'customer_name' => $validated['name'],
+                'customer_email' => $validated['email'],
+                'customer_document' => $validated['document'], 
+                'customer_phone' => $validated['phone'], // Enviando telefone corretamente agora
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'customer_name' => $request->shipping_name,
-                'customer_email' => $request->shipping_email,
-                'customer_phone' => $request->shipping_phone,
-                'items' => $order->items->map(function ($item) {
-                    return [
-                        'product_name' => $item->product_name,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price,
-                    ];
-                })->toArray(),
-                'shipping_cost' => $shippingCost,
-                'shipping_method' => $request->shipping_method,
             ];
 
-            $paymentResult = $this->paymentService->createPreference($paymentData);
-
-            if (!$paymentResult['success']) {
-                DB::rollBack();
-                return redirect()->back()->with('error', $paymentResult['message']);
-            }
-
-            // Salvar ID da preferência no pedido
-            $order->update([
-                'payment_id' => $paymentResult['preference_id'],
-            ]);
+            // 5. Gerar preferência
+            $preference = $paymentService->createPreference($paymentData);
 
             DB::commit();
 
-            // Limpar carrinho
-            $this->cartService->clear();
-
-            // Redirecionar para o Mercado Pago
-            $initPoint = config('app.env') === 'production' 
-                ? $paymentResult['init_point'] 
-                : $paymentResult['sandbox_init_point'];
-
-            return redirect($initPoint);
+            // VERIFICAÇÃO FINAL (Sem dd)
+            if (isset($preference['id'])) {
+                $cartService->clear();
+                
+                // Define o link correto (Sandbox ou Produção)
+                $link = config('app.env') === 'local' 
+                        ? ($preference['sandbox_init_point'] ?? $preference['init_point'])
+                        : $preference['init_point'];
+                
+                return redirect()->away($link);
+            } else {
+                // Se der erro, mostra qual foi
+                Log::error('Erro MP:', ['response' => $preference]);
+                return back()->with('error', $preference['message'] ?? 'Erro ao comunicar com Mercado Pago.');
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erro no checkout: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao processar pedido. Tente novamente.');
+            Log::error('Erro Checkout:', ['msg' => $e->getMessage()]);
+            return back()->with('error', 'Erro ao processar: ' . $e->getMessage());
         }
     }
 
     public function success(Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id !== auth()->id()) {
             abort(403);
         }
-
         return view('checkout.success', compact('order'));
-    }
-
-    public function webhook(Request $request)
-    {
-        try {
-            $data = $request->all();
-            Log::info('Webhook Mercado Pago recebido', $data);
-
-            $result = $this->paymentService->processWebhook($data);
-
-            if (!$result['success']) {
-                return response()->json(['status' => 'error'], 400);
-            }
-
-            // Buscar pedido pelo external_reference
-            $order = Order::where('order_number', $result['external_reference'])->first();
-
-            if (!$order) {
-                Log::warning('Pedido não encontrado: ' . $result['external_reference']);
-                return response()->json(['status' => 'not_found'], 404);
-            }
-
-            // Atualizar status do pedido baseado no status do pagamento
-            switch ($result['status']) {
-                case 'approved':
-                    $order->markAsPaid();
-                    break;
-                case 'pending':
-                case 'in_process':
-                    $order->update(['payment_status' => 'pending']);
-                    break;
-                case 'rejected':
-                case 'cancelled':
-                    $order->update([
-                        'status' => 'cancelled',
-                        'payment_status' => 'rejected',
-                    ]);
-                    // Devolver estoque
-                    foreach ($order->items as $item) {
-                        $item->productVariant->incrementStock($item->quantity);
-                    }
-                    break;
-            }
-
-            return response()->json(['status' => 'success'], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao processar webhook: ' . $e->getMessage());
-            return response()->json(['status' => 'error'], 500);
-        }
     }
 }

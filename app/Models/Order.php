@@ -13,6 +13,14 @@ class Order extends Model
         'user_id',
         'order_number',
         'status',
+        
+        // Campos de Valor
+        'total_amount', // Adicionado para compatibilidade com o Controller
+        'subtotal',
+        'shipping_cost',
+        'total', // Mantido caso seu banco use este nome
+        
+        // Campos de Endereço e Cliente
         'shipping_name',
         'shipping_email',
         'shipping_phone',
@@ -23,12 +31,14 @@ class Order extends Model
         'shipping_city',
         'shipping_state',
         'shipping_zipcode',
-        'subtotal',
-        'shipping_cost',
-        'total',
+        'document', // Adicionado caso precise salvar CPF
+        
+        // Detalhes do Envio
         'shipping_method',
         'shipping_days',
         'tracking_code',
+        
+        // Pagamento
         'payment_method',
         'payment_id',
         'payment_status',
@@ -40,6 +50,7 @@ class Order extends Model
         'subtotal' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
         'total' => 'decimal:2',
+        'total_amount' => 'decimal:2', // Adicionado
         'paid_at' => 'datetime',
     ];
 
@@ -64,9 +75,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    // --- Helpers de Status ---
+
     public function isPending()
     {
-        return $this->status === 'pending_payment';
+        return $this->status === 'pending_payment' || $this->status === 'pending';
     }
 
     public function isPaid()
@@ -76,7 +89,7 @@ class Order extends Model
 
     public function canBeCancelled()
     {
-        return in_array($this->status, ['pending_payment', 'paid', 'processing']);
+        return in_array($this->status, ['pending_payment', 'pending', 'paid', 'processing']);
     }
 
     public function markAsPaid()
@@ -93,9 +106,13 @@ class Order extends Model
         if ($this->canBeCancelled()) {
             $this->update(['status' => 'cancelled']);
             
-            // Devolver estoque
-            foreach ($this->items as $item) {
-                $item->productVariant->incrementStock($item->quantity);
+            // Devolver estoque se a relação existir e estiver carregada ou acessível
+            if ($this->items) {
+                foreach ($this->items as $item) {
+                    if ($item->productVariant) {
+                        $item->productVariant->incrementStock($item->quantity);
+                    }
+                }
             }
         }
     }
@@ -103,6 +120,7 @@ class Order extends Model
     public function getStatusLabelAttribute()
     {
         return match($this->status) {
+            'pending' => 'Pendente',
             'pending_payment' => 'Aguardando Pagamento',
             'paid' => 'Pago',
             'processing' => 'Em Processamento',

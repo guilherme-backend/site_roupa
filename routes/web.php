@@ -1,63 +1,56 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShopController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\Customer\DashboardController;
-use App\Http\Controllers\Customer\OrderController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| Web Routes
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// --- Rotas Públicas da Loja ---
+Route::get('/', [ShopController::class, 'index'])->name('shop.index');
 
-// Shop & Products
-Route::get('/loja', [ShopController::class, 'index'])->name('shop.index');
+// Rota de Categoria (A QUE ESTAVA FALTANDO)
 Route::get('/categoria/{slug}', [ShopController::class, 'category'])->name('shop.category');
-Route::get('/produto/{slug}', [ProductController::class, 'show'])->name('products.show');
 
-// Cart
-Route::get('/carrinho', [CartController::class, 'index'])->name('cart.index');
-Route::post('/carrinho/adicionar', [CartController::class, 'add'])->name('cart.add');
-Route::patch('/carrinho/atualizar/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/carrinho/remover/{id}', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/carrinho/limpar', [CartController::class, 'clear'])->name('cart.clear');
+// Rota de Detalhes do Produto
+Route::get('/produto/{slug}', [ShopController::class, 'show'])->name('shop.show');
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
-|--------------------------------------------------------------------------
-*/
 
-Route::middleware('auth')->group(function () {
-    // Profile
-    Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/perfil', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/perfil', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // Customer Dashboard
-    Route::get('/minha-conta', [DashboardController::class, 'index'])->name('customer.dashboard');
-    
-    // Customer Orders
-    Route::get('/meus-pedidos', [OrderController::class, 'index'])->name('customer.orders.index');
-    Route::get('/meus-pedidos/{order}', [OrderController::class, 'show'])->name('customer.orders.show');
-    Route::post('/meus-pedidos/{order}/cancelar', [OrderController::class, 'cancel'])->name('customer.orders.cancel');
-    
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/calcular-frete', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
-    Route::post('/checkout/processar', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/sucesso/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+// --- Rotas do Carrinho ---
+Route::prefix('carrinho')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/adicionar/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::patch('/atualizar/{id}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/remover/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/limpar', [CartController::class, 'clear'])->name('cart.clear');
 });
 
-// Webhook do Mercado Pago (não requer autenticação)
-Route::post('/webhook/mercadopago', [CheckoutController::class, 'webhook'])->name('webhook.mercadopago');
 
+// --- Rotas Autenticadas (Checkout e Perfil) ---
+Route::middleware(['auth'])->group(function () {
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/processar', [CheckoutController::class, 'process'])->name('checkout.store');
+    Route::get('/checkout/sucesso/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    // Perfil (Padrão Breeze)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+
+// --- Webhook do Mercado Pago ---
+Route::post('/webhook/mercadopago', [WebhookController::class, 'handle'])->name('webhook.mercadopago');
+
+
+// --- Autenticação ---
 require __DIR__.'/auth.php';

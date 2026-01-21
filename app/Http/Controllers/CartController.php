@@ -23,23 +23,29 @@ class CartController extends Controller
     }
 
     public function add(Request $request)
-    {
-        $request->validate([
-            'variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+{
+    // --- INICIO DO DEBUG ---
+    // Isso vai parar o código e mostrar o que está chegando do formulário
+    // dd($request->all()); 
+    // --- FIM DO DEBUG ---
 
-        $added = $this->cartService->addItem(
-            $request->variant_id,
-            $request->quantity
-        );
+    $request->validate([
+        'variant_id' => 'required|exists:product_variants,id',
+        'quantity' => 'required|integer|min:1',
+    ]);
 
-        if (!$added) {
-            return redirect()->back()->with('error', 'Não foi possível adicionar o produto ao carrinho. Verifique o estoque disponível.');
-        }
+    $added = $this->cartService->addItem(
+        $request->variant_id,
+        $request->quantity
+    );
 
-        return redirect()->back()->with('success', 'Produto adicionado ao carrinho com sucesso!');
+    if (!$added) {
+        // Se entrar aqui, é porque o CartService retornou false (provavelmente sem estoque)
+        return redirect()->back()->with('error', 'Erro: Estoque insuficiente ou produto indisponível.');
     }
+
+    return redirect()->back()->with('success', 'Produto adicionado ao carrinho!');
+}
 
     public function update(Request $request, $itemKey)
     {

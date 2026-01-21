@@ -31,9 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // ... outros serviços (mailgun, ses, stripe, etc)
+
     'mercadopago' => [
-        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
         'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
     ],
 
-];
+]; // Fim do arquivo
