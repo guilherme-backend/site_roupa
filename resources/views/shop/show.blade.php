@@ -60,6 +60,12 @@
                     <div class="text-right">
                         <p class="text-3xl font-bold text-gray-900">R$ {{ number_format($product->base_price, 2, ',', '.') }}</p>
                         <p class="text-xs text-gray-500 mt-1">em até 10x sem juros</p>
+                        @php $totalStock = $product->total_stock; @endphp
+                        @if($totalStock <= 0)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-2">Esgotado</span>
+                        @elseif($totalStock <= 5)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-2">Últimas {{ $totalStock }} unidades!</span>
+                        @endif
                     </div>
                 </div>
 
@@ -101,9 +107,11 @@
                             <button type="button" class="p-2 text-gray-400 hover:text-gray-600">+</button>
                         </div>
                         
-                        <button type="submit" class="flex-1 bg-gray-900 border border-transparent rounded-xl py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg shadow-gray-200 transition-all transform hover:-translate-y-0.5">
+                        <button type="submit" 
+                            class="flex-1 bg-gray-900 border border-transparent rounded-xl py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg shadow-gray-200 transition-all transform hover:-translate-y-0.5 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            {{ $product->total_stock <= 0 ? 'disabled' : '' }}>
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                            Adicionar ao Carrinho
+                            {{ $product->total_stock <= 0 ? 'Produto Esgotado' : 'Adicionar ao Carrinho' }}
                         </button>
                         
                         <button type="button" class="p-4 rounded-xl border-2 border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all">

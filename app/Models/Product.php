@@ -79,6 +79,26 @@ class Product extends Model
         return $this->variants()->sum('stock_quantity');
     }
 
+    public function scopeInStock($query)
+    {
+        return $query->whereHas('variants', function ($query) {
+            $query->where('stock_quantity', '>', 0)->where('is_available', true);
+        });
+    }
+
+    public function hasStock($variantId = null, $quantity = 1)
+    {
+        if ($variantId) {
+            return $this->variants()
+                ->where('id', $variantId)
+                ->where('stock_quantity', '>=', $quantity)
+                ->where('is_available', true)
+                ->exists();
+        }
+
+        return $this->total_stock >= $quantity;
+    }
+
     public function getMinPriceAttribute()
     {
         $minAdjustment = $this->variants()->min('price_adjustment') ?? 0;

@@ -16,6 +16,12 @@ class CartController extends Controller
 
     public function index()
     {
+        $outOfStock = $this->cartService->validateStock();
+        
+        if (!empty($outOfStock)) {
+            session()->flash('warning', 'Alguns itens foram removidos ou atualizados por falta de estoque: ' . implode(', ', $outOfStock));
+        }
+
         $cart = $this->cartService->getCart();
         $total = $this->cartService->getTotal();
 

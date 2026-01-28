@@ -30,7 +30,10 @@
                     <a href="#" class="text-gray-600 hover:text-black font-medium transition">Categorias</a>
                     <a href="{{ route('cart.index') }}" class="text-gray-600 hover:text-black font-medium transition relative">
                         Carrinho
-                        <span class="absolute -top-2 -right-3 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                        @php $cartCount = count(session('shopping_cart', [])); @endphp
+                        @if($cartCount > 0)
+                            <span class="absolute -top-2 -right-3 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ $cartCount }}</span>
+                        @endif
                     </a>
                 </div>
 
@@ -47,6 +50,25 @@
     </nav>
 
     <main class="min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            @if(session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if(session('warning'))
+                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('warning') }}</span>
+                </div>
+            @endif
+        </div>
         @yield('content')
     </main>
 

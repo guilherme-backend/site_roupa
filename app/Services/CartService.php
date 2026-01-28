@@ -42,7 +42,7 @@ class CartService
                 'color' => $variant->color,
                 'price' => $variant->final_price,
                 'quantity' => $quantity,
-                'image' => $variant->product->primaryImage?->image_path,
+                'image' => $variant->product->main_image ?? $variant->product->primaryImage?->image_path,
             ];
         }
 
@@ -108,5 +108,32 @@ class CartService
     public function isEmpty(): bool
     {
         return empty($this->getCart());
+    }
+
+    public function validateStock(): array
+    {
+        $cart = $this->getCart();
+        $outOfStockItems = [];
+        $changed = false;
+
+        foreach ($cart as $key => $item) {
+            $variant = ProductVariant::find($item['variant_id']);
+            
+            if (!$variant || !$variant->is_available || $variant->stock_quantity <= 0) {
+                $outOfStockItems[] = $item['product_name'] . " (Esgotado)";
+                unset($cart[$key]);
+                $changed = true;
+            } elseif ($item['quantity'] > $variant->stock_quantity) {
+                $outOfStockItems[] = $item['product_name'] . " (Quantidade ajustada para o estoque disponível)";
+                $cart[$key]['quantity'] = $variant->stock_quantity;
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            Session::put(self::CART_SESSION_KEY, $cart);
+        }
+
+        return $outOfStockItems;
     }
 }
