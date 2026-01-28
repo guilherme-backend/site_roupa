@@ -18,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -38,8 +39,8 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Informações do Produto')
-                    ->description('Cadastre os dados principais do produto e sua imagem de destaque.')
+                Section::make('Informações Básicas')
+                    ->description('Cadastre os dados principais do produto.')
                     ->schema([
                         Select::make('category_id')
                             ->label('Categoria')
@@ -58,39 +59,65 @@ class ProductResource extends Resource
                         TextInput::make('slug')
                             ->label('URL Amigável (Slug)')
                             ->maxLength(255)
-                            ->helperText('Gerado automaticamente a partir do nome.'),
+                            ->helperText('Gerado automaticamente.'),
                         
                         TextInput::make('base_price')
-                            ->label('Preço Base')
+                            ->label('Preço de Venda')
                             ->required()
                             ->numeric()
                             ->prefix('R$')
                             ->step(0.01),
 
                         FileUpload::make('main_image')
-                            ->label('Foto Principal')
+                            ->label('Foto do Produto')
                             ->image()
                             ->directory('products')
                             ->imageEditor()
-                            ->columnSpanFull()
-                            ->helperText('Esta será a imagem exibida na vitrine da loja.'),
-
-                        RichEditor::make('description')
-                            ->label('Descrição Detalhada')
-                            ->required()
                             ->columnSpanFull(),
                     ])->columns(2),
-                
-                Section::make('Configurações e Visibilidade')
+
+                Section::make('Estoque e Tamanhos')
+                    ->description('Defina a quantidade em estoque e os tamanhos disponíveis.')
                     ->schema([
+                        TextInput::make('stock_quantity')
+                            ->label('Quantidade Total em Estoque')
+                            ->numeric()
+                            ->default(fn ($record) => $record?->total_stock ?? 0)
+                            ->minValue(0)
+                            ->helperText('Se o produto tiver tamanhos, este estoque será dividido entre eles.')
+                            ->required(),
+
+                        CheckboxList::make('sizes')
+                            ->label('Tamanhos Disponíveis')
+                            ->options([
+                                'PP' => 'PP',
+                                'P' => 'P',
+                                'M' => 'M',
+                                'G' => 'G',
+                                'GG' => 'GG',
+                                'XG' => 'XG',
+                                'U' => 'Único',
+                            ])
+                            ->columns(4)
+                            ->gridDirection('row')
+                            ->default(fn ($record) => $record?->variants()->pluck('size')->toArray() ?? [])
+                            ->visible(fn (Forms\Get $get) => Category::find($get('category_id'))?->has_sizes ?? true)
+                            ->helperText('Selecione os tamanhos que este produto possui.'),
+                    ]),
+                
+                Section::make('Descrição e Detalhes')
+                    ->schema([
+                        RichEditor::make('description')
+                            ->label('Descrição')
+                            ->required()
+                            ->columnSpanFull(),
+                        
                         Toggle::make('is_active')
                             ->label('Produto Ativo')
-                            ->helperText('Se desmarcado, o produto não aparecerá na loja.')
                             ->default(true),
                         
                         Toggle::make('is_featured')
                             ->label('Destaque na Home')
-                            ->helperText('Exibir este produto na seção de destaques.')
                             ->default(false),
                     ])->columns(2),
             ]);
@@ -108,8 +135,7 @@ class ProductResource extends Resource
                 TextColumn::make('name')
                     ->label('Nome')
                     ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
+                    ->sortable(),
                 
                 TextColumn::make('category.name')
                     ->label('Categoria')
@@ -120,18 +146,16 @@ class ProductResource extends Resource
                 TextColumn::make('base_price')
                     ->label('Preço')
                     ->money('BRL')
-                    ->sortable()
-                    ->color('success'),
+                    ->sortable(),
+                
+                TextColumn::make('total_stock')
+                    ->label('Estoque Total')
+                    ->badge()
+                    ->color(fn ($state) => $state > 10 ? 'success' : ($state > 0 ? 'warning' : 'danger')),
                 
                 IconColumn::make('is_active')
                     ->label('Ativo')
                     ->boolean(),
-                
-                TextColumn::make('created_at')
-                    ->label('Cadastro')
-                    ->dateTime('d/m/Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

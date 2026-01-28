@@ -10,6 +10,9 @@ class Product extends Model
 {
     use HasFactory;
 
+    public $stock_quantity;
+    public $sizes = [];
+
     protected $fillable = [
         'category_id',
         'name',
@@ -37,11 +40,61 @@ class Product extends Model
             }
         });
 
+        static::created(function ($product) {
+            $product->syncSimpleStockAndSizes();
+        });
+
         static::updating(function ($product) {
             if ($product->isDirty('name') && empty($product->slug)) {
                 $product->slug = Str::slug($product->name);
             }
         });
+
+        static::updated(function ($product) {
+            $product->syncSimpleStockAndSizes();
+        });
+    }
+
+    public function syncSimpleStockAndSizes()
+    {
+        if ($this->stock_quantity === null) return;
+
+        $sizes = is_array($this->sizes) ? $this->sizes : [];
+        
+        // Se não tiver tamanhos selecionados ou a categoria não permitir tamanhos
+        if (empty($sizes) || ($this->category && !$this->category->has_sizes)) {
+            $this->variants()->updateOrCreate(
+                ['product_id' => $this->id, 'size' => 'U'],
+                [
+                    'stock_quantity' => $this->stock_quantity,
+                    'color' => 'Padrão',
+                    'is_available' => true,
+                    'sku' => 'PROD-' . $this->id . '-U'
+                ]
+            );
+            
+            // Remove outras variantes se existirem
+            $this->variants()->where('size', '!=', 'U')->delete();
+        } else {
+            // Divide o estoque entre os tamanhos selecionados
+            $stockPerSize = floor($this->stock_quantity / count($sizes));
+            $extraStock = $this->stock_quantity % count($sizes);
+
+            foreach ($sizes as $index => $size) {
+                $this->variants()->updateOrCreate(
+                    ['product_id' => $this->id, 'size' => $size],
+                    [
+                        'stock_quantity' => $stockPerSize + ($index === 0 ? $extraStock : 0),
+                        'color' => 'Padrão',
+                        'is_available' => true,
+                        'sku' => 'PROD-' . $this->id . '-' . $size
+                    ]
+                );
+            }
+            
+            // Remove tamanhos que não foram selecionados
+            $this->variants()->whereNotIn('size', $sizes)->delete();
+        }
     }
 
     public function category()
