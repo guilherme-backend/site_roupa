@@ -20,17 +20,17 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center">
-                    <a href="{{ route('shop.index') }}" class="font-bold text-2xl text-indigo-600 tracking-tight">
-                        MODA<span class="text-gray-900">URBANA</span>
+                    <a href="{{ route('shop.index') }}" class="font-bold text-2xl text-gray-900 tracking-tight">
+                        MODA<span class="text-gray-400">URBANA</span>
                     </a>
                 </div>
                 
                 <div class="hidden md:flex space-x-8 items-center">
-                    <a href="{{ route('shop.index') }}" class="text-gray-600 hover:text-indigo-600 font-medium transition">Início</a>
-                    <a href="#" class="text-gray-600 hover:text-indigo-600 font-medium transition">Categorias</a>
-                    <a href="{{ route('cart.index') }}" class="text-gray-600 hover:text-indigo-600 font-medium transition relative">
+                    <a href="{{ route('shop.index') }}" class="text-gray-600 hover:text-black font-medium transition">Início</a>
+                    <a href="#" class="text-gray-600 hover:text-black font-medium transition">Categorias</a>
+                    <a href="{{ route('cart.index') }}" class="text-gray-600 hover:text-black font-medium transition relative">
                         Carrinho
-                        <span class="absolute -top-2 -right-3 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                        <span class="absolute -top-2 -right-3 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
                     </a>
                 </div>
 
@@ -39,7 +39,7 @@
                         <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600">Minha Conta</a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600">Entrar</a>
-                        <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Cadastrar</a>
+                        <a href="{{ route('register') }}" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition">Cadastrar</a>
                     @endauth
                 </div>
             </div>

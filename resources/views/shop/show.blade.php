@@ -25,7 +25,9 @@
             <!-- Galeria de Imagens -->
             <div class="flex flex-col">
                 <div class="w-full aspect-[4/5] rounded-3xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm group">
-                    @if($product->primaryImage)
+                    @if($product->main_image)
+                        <img src="{{ Storage::url($product->main_image) }}" alt="{{ $product->name }}" class="w-full h-full object-center object-cover group-hover:scale-105 transition duration-500">
+                    @elseif($product->primaryImage)
                         <img src="{{ Storage::url($product->primaryImage->image_path) }}" alt="{{ $product->name }}" class="w-full h-full object-center object-cover group-hover:scale-105 transition duration-500">
                     @else
                         <div class="flex flex-col items-center justify-center h-full text-gray-400">
@@ -56,7 +58,7 @@
                         <h1 class="mt-2 text-4xl font-extrabold tracking-tight text-gray-900">{{ $product->name }}</h1>
                     </div>
                     <div class="text-right">
-                        <p class="text-3xl font-bold text-indigo-600">R$ {{ number_format($product->base_price, 2, ',', '.') }}</p>
+                        <p class="text-3xl font-bold text-gray-900">R$ {{ number_format($product->base_price, 2, ',', '.') }}</p>
                         <p class="text-xs text-gray-500 mt-1">em até 10x sem juros</p>
                     </div>
                 </div>
@@ -99,7 +101,7 @@
                             <button type="button" class="p-2 text-gray-400 hover:text-gray-600">+</button>
                         </div>
                         
-                        <button type="submit" class="flex-1 bg-indigo-600 border border-transparent rounded-xl py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-0.5">
+                        <button type="submit" class="flex-1 bg-gray-900 border border-transparent rounded-xl py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg shadow-gray-200 transition-all transform hover:-translate-y-0.5">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                             Adicionar ao Carrinho
                         </button>

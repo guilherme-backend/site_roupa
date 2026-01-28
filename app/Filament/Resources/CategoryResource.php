@@ -18,25 +18,43 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+    protected static ?string $navigationLabel = 'Categorias';
+    
+    protected static ?string $modelLabel = 'Categoria';
+    
+    protected static ?string $pluralModelLabel = 'Categorias';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
-                    ->maxLength(255)
-                    ->helperText('Deixe em branco para gerar automaticamente'),
-                Forms\Components\Textarea::make('description')
-                    ->columnSpanFull(),
-                Forms\Components\Toggle::make('is_active')
-                    ->required(),
-                Forms\Components\TextInput::make('order')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
+                Forms\Components\Section::make('Informações da Categoria')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Slug')
+                            ->maxLength(255)
+                            ->helperText('Deixe em branco para gerar automaticamente'),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descrição')
+                            ->columnSpanFull(),
+                        Forms\Components\Toggle::make('has_sizes')
+                            ->label('Possui Tamanhos?')
+                            ->helperText('Habilite se os produtos desta categoria usam tamanhos (ex: P, M, G)')
+                            ->default(true),
+                        Forms\Components\Toggle::make('is_active')
+                            ->label('Ativo')
+                            ->default(true),
+                        Forms\Components\TextInput::make('order')
+                            ->label('Ordem de Exibição')
+                            ->required()
+                            ->numeric()
+                            ->default(0),
+                    ])->columns(2),
             ]);
     }
 

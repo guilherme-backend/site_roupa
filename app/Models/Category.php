@@ -15,11 +15,13 @@ class Category extends Model
         'slug',
         'description',
         'is_active',
+        'has_sizes',
         'order',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'has_sizes' => 'boolean',
     ];
 
     protected static function boot()

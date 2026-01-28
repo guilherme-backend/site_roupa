@@ -18,6 +18,7 @@ class Product extends Model
         'base_price',
         'is_active',
         'is_featured',
+        'main_image',
     ];
 
     protected $casts = [
