@@ -78,6 +78,7 @@ class VariantsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['product.category']))
             ->columns([
                 Tables\Columns\TextColumn::make('size')
                     ->label('Tam.')
