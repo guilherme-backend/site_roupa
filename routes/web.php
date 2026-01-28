@@ -51,17 +51,17 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Endereços
-    Route::get('/profile/addresses', [AddressController::class, 'index'])->name('profile.addresses.index');
-    Route::get('/profile/addresses/create', [AddressController::class, 'create'])->name('profile.addresses.create');
-    Route::post('/profile/addresses', [AddressController::class, 'store'])->name('profile.addresses.store');
-    Route::get('/profile/addresses/{address}/edit', [AddressController::class, 'edit'])->name('profile.addresses.edit');
-    Route::put('/profile/addresses/{address}', [AddressController::class, 'update'])->name('profile.addresses.update');
-    Route::delete('/profile/addresses/{address}', [AddressController::class, 'destroy'])->name('profile.addresses.destroy');
-    Route::post('/profile/addresses/{address}/default', [AddressController::class, 'setDefault'])->name('profile.addresses.default');
+    Route::get('/enderecos', [AddressController::class, 'index'])->name('profile.addresses.index');
+    Route::get('/enderecos/novo', [AddressController::class, 'create'])->name('profile.addresses.create');
+    Route::post('/enderecos', [AddressController::class, 'store'])->name('profile.addresses.store');
+    Route::get('/enderecos/{address}/editar', [AddressController::class, 'edit'])->name('profile.addresses.edit');
+    Route::put('/enderecos/{address}', [AddressController::class, 'update'])->name('profile.addresses.update');
+    Route::delete('/enderecos/{address}', [AddressController::class, 'destroy'])->name('profile.addresses.destroy');
+    Route::post('/enderecos/{address}/padrao', [AddressController::class, 'setDefault'])->name('profile.addresses.default');
 
     // Minhas Compras
-    Route::get('/my-orders', [MyOrdersController::class, 'index'])->name('profile.orders.index');
-    Route::get('/my-orders/{order}', [MyOrdersController::class, 'show'])->name('profile.orders.show');
+    Route::get('/minhas-compras', [MyOrdersController::class, 'index'])->name('profile.orders.index');
+    Route::get('/minhas-compras/{order}', [MyOrdersController::class, 'show'])->name('profile.orders.show');
 });
 
 

@@ -45,8 +45,8 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div class="absolute right-0 w-48 mt-2 py-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50">
-                                <a href="{{ route('profile.orders.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Minhas Compras</a>
-                                <a href="{{ route('profile.addresses.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Meus Endereços</a>
+                                <a href="{{ route('profile.orders.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Minhas Compras</a>
+                                <a href="{{ route('profile.addresses.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Meus Endereços</a>
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Meu Perfil</a>
                                 <hr class="my-2 border-gray-100">
                                 <form method="POST" action="{{ route('logout') }}">
