@@ -20,6 +20,9 @@ class MyOrdersController extends Controller
             abort(403);
         }
 
+        // Carrega os relacionamentos necessários para evitar erros de propriedade nula
+        $order->load(['items.product.primaryImage']);
+
         return view('profile.orders.show', compact('order'));
     }
 }
