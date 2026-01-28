@@ -54,3 +54,8 @@ Route::post('/webhook/mercadopago', [WebhookController::class, 'handle'])->name(
 
 // --- Autenticação ---
 require __DIR__.'/auth.php';
+
+// Rota de teste isolada
+Route::get('/teste-memoria', function () {
+    return 'SE VOCÊ ESTÁ LENDO ISSO, O SERVIDOR ESTÁ VIVO!';
+});
