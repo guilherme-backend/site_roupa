@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class VariantsRelationManager extends RelationManager
 {
@@ -35,7 +36,7 @@ class VariantsRelationManager extends RelationManager
                                 'U' => 'Único',
                             ])
                             ->required(fn (RelationManager $livewire) => $livewire->getOwnerRecord()->category?->has_sizes ?? true)
-                            ->visible(fn (RelationManager $livewire) => $livewire->getOwnerRecord()->category?->has_sizes ?? true),
+                            ->hidden(fn (RelationManager $livewire) => !($livewire->getOwnerRecord()->category?->has_sizes ?? true)),
                         
                         Forms\Components\TextInput::make('color')
                             ->label('Cor')
@@ -83,7 +84,7 @@ class VariantsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('size')
                     ->label('Tam.')
                     ->sortable()
-                    ->toggleable(visible: fn (RelationManager $livewire) => $livewire->getOwnerRecord()->category?->has_sizes ?? true),
+                    ->hidden(fn (RelationManager $livewire) => !($livewire->getOwnerRecord()->category?->has_sizes ?? true)),
                 
                 Tables\Columns\TextColumn::make('color')
                     ->label('Cor')
