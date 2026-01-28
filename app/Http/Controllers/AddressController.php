@@ -45,13 +45,13 @@ class AddressController extends Controller
 
     public function edit(UserAddress $address)
     {
-        $this->authorize('update', $address);
+        if ($address->user_id !== Auth::id()) abort(403);
         return view('profile.addresses.edit', compact('address'));
     }
 
     public function update(Request $request, UserAddress $address)
     {
-        $this->authorize('update', $address);
+        if ($address->user_id !== Auth::id()) abort(403);
 
         $validated = $request->validate([
             'label' => 'nullable|string|max:50',
@@ -77,14 +77,14 @@ class AddressController extends Controller
 
     public function destroy(UserAddress $address)
     {
-        $this->authorize('delete', $address);
+        if ($address->user_id !== Auth::id()) abort(403);
         $address->delete();
         return redirect()->route('profile.addresses.index')->with('success', 'Endereço removido com sucesso!');
     }
 
     public function setDefault(UserAddress $address)
     {
-        $this->authorize('update', $address);
+        if ($address->user_id !== Auth::id()) abort(403);
         Auth::user()->addresses()->update(['is_default' => false]);
         $address->update(['is_default' => true]);
         
