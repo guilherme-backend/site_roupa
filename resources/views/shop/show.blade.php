@@ -150,7 +150,7 @@
                                             {{ $related->name }}
                                         </a>
                                     </h3>
-                                    <p class="mt-1 text-xs text-gray-500">{{ $related->category->name }}</p>
+                                    <p class="mt-1 text-xs text-gray-500">{{ $related->category->name ?? 'Coleção' }}</p>
                                 </div>
                                 <p class="text-sm font-bold text-gray-900">R$ {{ number_format($related->base_price, 2, ',', '.') }}</p>
                             </div>
