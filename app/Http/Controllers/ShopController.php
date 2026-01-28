@@ -13,7 +13,6 @@ class ShopController extends Controller
         // 1. Busca Segura: Pega apenas produtos ativos e pagina (12 por página)
         // O select reduz o uso de memória drasticamente
         $products = Product::query()
-            ->select(['id', 'name', 'slug', 'base_price', 'category_id', 'is_active', 'main_image'])
             ->where('is_active', true)
             ->inStock() // Filtra apenas produtos com estoque
             ->with(['primaryImage', 'category'])
@@ -40,7 +39,6 @@ class ShopController extends Controller
 
         // Busca produtos relacionados simples (limite de 4)
         $relatedProducts = Product::query()
-            ->select(['id', 'name', 'slug', 'base_price', 'is_active', 'main_image', 'category_id'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
