@@ -39,7 +39,22 @@
 
                 <div class="flex items-center space-x-4">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600">Minha Conta</a>
+                        <div class="relative group">
+                            <button class="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black">
+                                Olá, {{ explode(' ', Auth::user()->name)[0] }}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="absolute right-0 w-48 mt-2 py-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50">
+                                <a href="{{ route('profile.orders.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Minhas Compras</a>
+                                <a href="{{ route('profile.addresses.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Meus Endereços</a>
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Meu Perfil</a>
+                                <hr class="my-2 border-gray-100">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Sair</button>
+                                </form>
+                            </div>
+                        </div>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600">Entrar</a>
                         <a href="{{ route('register') }}" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition">Cadastrar</a>

@@ -33,10 +33,17 @@ class CheckoutController extends Controller
             'email' => 'required|email|max:255',
             'document' => 'required|string', 
             'phone' => 'required|string',
+            'address_id' => 'required|exists:user_addresses,id',
+            'shipping_method' => 'required|string',
         ]);
 
+        $address = \App\Models\UserAddress::find($validated['address_id']);
         $cart = $cartService->getCart();
-        $total = $cartService->getTotal();
+        $subtotal = $cartService->getTotal();
+        
+        // Simula o custo de frete baseado no método (em produção viria do serviço)
+        $shippingCost = $validated['shipping_method'] === '04014' ? 25.50 : 15.90;
+        $total = $subtotal + $shippingCost;
 
         if (empty($cart)) {
             return redirect()->route('shop.index')->with('error', 'Seu carrinho está vazio.');
@@ -51,19 +58,19 @@ class CheckoutController extends Controller
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'status' => 'pending_payment',
                 'total' => $total,
-                'subtotal' => $total,
-                'shipping_cost' => 0,
+                'subtotal' => $subtotal,
+                'shipping_cost' => $shippingCost,
                 'shipping_name' => $validated['name'],
                 'shipping_email' => $validated['email'],
                 'shipping_phone' => $validated['phone'],
-                'shipping_address' => 'Endereço Digital / Não informado',
-                'shipping_number' => 'S/N',
-                'shipping_neighborhood' => 'Digital',
-                'shipping_city' => 'Digital',
-                'shipping_state' => 'XX',
-                'shipping_zipcode' => '00000-000',
+                'shipping_address' => $address->address,
+                'shipping_number' => $address->number,
+                'shipping_neighborhood' => $address->neighborhood,
+                'shipping_city' => $address->city,
+                'shipping_state' => $address->state,
+                'shipping_zipcode' => $address->zipcode,
                 'payment_method' => 'mercadopago',
-                'shipping_method' => 'digital', 
+                'shipping_method' => $validated['shipping_method'] === '04014' ? 'SEDEX' : 'PAC', 
             ]);
 
             // 3. Salvar os Itens do Pedido
@@ -96,7 +103,7 @@ class CheckoutController extends Controller
             // 4. Preparar dados para o MP
             $paymentData = [
                 'items' => $cart,
-                'shipping_cost' => 0,
+                'shipping_cost' => $shippingCost,
                 'customer_name' => $validated['name'],
                 'customer_email' => $validated['email'],
                 'customer_document' => $validated['document'], 

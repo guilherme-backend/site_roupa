@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\TextInput;
 
 class OrderResource extends Resource
 {
@@ -192,6 +193,27 @@ class OrderResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('despachar')
+                    ->label('Despachar')
+                    ->icon('heroicon-o-truck')
+                    ->color('success')
+                    ->form([
+                        TextInput::make('tracking_code')
+                            ->label('Código de Rastreio')
+                            ->required(),
+                        TextInput::make('tracking_url')
+                            ->label('Link de Rastreio')
+                            ->default('https://rastreamento.correios.com.br/app/index.php'),
+                    ])
+                    ->action(function (Order $record, array $data) {
+                        $record->update([
+                            'status' => 'shipped',
+                            'tracking_code' => $data['tracking_code'],
+                            'tracking_url' => $data['tracking_url'],
+                            'shipped_at' => now(),
+                        ]);
+                    })
+                    ->visible(fn (Order $record) => $record->status === 'paid'),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])

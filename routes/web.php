@@ -6,6 +6,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\MyOrdersController;
+use App\Http\Controllers\ShippingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,12 +42,26 @@ Route::middleware(['auth'])->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/processar', [CheckoutController::class, 'process'])->name('checkout.store');
+    Route::post('/checkout/calcular-frete', [ShippingController::class, 'calculate'])->name('checkout.shipping.calculate');
     Route::get('/checkout/sucesso/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // Perfil (Padrão Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Endereços
+    Route::get('/profile/addresses', [AddressController::class, 'index'])->name('profile.addresses.index');
+    Route::get('/profile/addresses/create', [AddressController::class, 'create'])->name('profile.addresses.create');
+    Route::post('/profile/addresses', [AddressController::class, 'store'])->name('profile.addresses.store');
+    Route::get('/profile/addresses/{address}/edit', [AddressController::class, 'edit'])->name('profile.addresses.edit');
+    Route::put('/profile/addresses/{address}', [AddressController::class, 'update'])->name('profile.addresses.update');
+    Route::delete('/profile/addresses/{address}', [AddressController::class, 'destroy'])->name('profile.addresses.destroy');
+    Route::post('/profile/addresses/{address}/default', [AddressController::class, 'setDefault'])->name('profile.addresses.default');
+
+    // Minhas Compras
+    Route::get('/my-orders', [MyOrdersController::class, 'index'])->name('profile.orders.index');
+    Route::get('/my-orders/{order}', [MyOrdersController::class, 'show'])->name('profile.orders.show');
 });
 
 
