@@ -82,7 +82,8 @@ class ProductResource extends Resource
                         TextInput::make('stock_quantity')
                             ->label('Quantidade Total em Estoque')
                             ->numeric()
-                            ->default(fn ($record) => $record?->total_stock ?? 0)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(fn ($component, $record) => $component->state($record?->total_stock ?? 0))
                             ->minValue(0)
                             ->helperText('Se o produto tiver tamanhos, este estoque será dividido entre eles.')
                             ->required(),
@@ -100,8 +101,9 @@ class ProductResource extends Resource
                             ])
                             ->columns(4)
                             ->gridDirection('row')
-                            ->default(fn ($record) => $record?->variants()->pluck('size')->toArray() ?? [])
-                            ->visible(fn (Forms\Get $get) => Category::find($get('category_id'))?->has_sizes ?? true)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(fn ($component, $record) => $component->state($record?->variants()->pluck('size')->toArray() ?? []))
+                            ->visible(fn (Forms\Get $get) => $get('category_id') ? (Category::find($get('category_id'))?->has_sizes ?? true) : true)
                             ->helperText('Selecione os tamanhos que este produto possui.'),
                     ]),
                 

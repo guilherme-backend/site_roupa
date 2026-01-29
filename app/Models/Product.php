@@ -22,6 +22,8 @@ class Product extends Model
         'is_active',
         'is_featured',
         'main_image',
+        'stock_quantity',
+        'sizes',
     ];
 
     protected $casts = [
@@ -59,7 +61,11 @@ class Product extends Model
     {
         if ($this->stock_quantity === null) return;
 
-        $sizes = is_array($this->sizes) ? $this->sizes : [];
+        $sizes = $this->sizes;
+        if (is_string($sizes)) {
+            $sizes = json_decode($sizes, true) ?? [];
+        }
+        $sizes = is_array($sizes) ? $sizes : [];
         
         // Se não tiver tamanhos selecionados ou a categoria não permitir tamanhos
         if (empty($sizes) || ($this->category && !$this->category->has_sizes)) {
