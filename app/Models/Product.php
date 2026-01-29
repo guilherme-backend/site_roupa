@@ -130,10 +130,22 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-
-    public function getTotalStockAttribute()
+    public function getStockQuantityAttribute()
     {
-        return $this->variants()->sum('stock_quantity');
+        return $this->variants->sum('stock_quantity');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        if (!$this->main_image) {
+            return asset('images/placeholder.png');
+        }
+
+        if (filter_var($this->main_image, FILTER_VALIDATE_URL)) {
+            return $this->main_image;
+        }
+
+        return asset('storage/' . $this->main_image);
     }
 
     public function scopeInStock($query)
