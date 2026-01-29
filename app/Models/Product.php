@@ -135,6 +135,11 @@ class Product extends Model
         return $this->variants->sum('stock_quantity');
     }
 
+    public function getTotalStockAttribute()
+    {
+        return $this->variants->sum('stock_quantity');
+    }
+
     public function getImageUrlAttribute()
     {
         if (!$this->main_image) {
