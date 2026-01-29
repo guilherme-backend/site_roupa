@@ -23,27 +23,32 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->getCart();
+        $subtotal = $this->cartService->getSubtotal();
+        $shipping = $this->cartService->getShipping();
         $total = $this->cartService->getTotal();
 
-        return view('cart.index', compact('cart', 'total'));
+        return view('cart.index', compact('cart', 'subtotal', 'shipping', 'total'));
     }
 
     public function add(Request $request)
-{
-    // --- INICIO DO DEBUG ---
-    // Isso vai parar o código e mostrar o que está chegando do formulário
-    // dd($request->all()); 
-    // --- FIM DO DEBUG ---
+	{
+	    $request->validate([
+	        'variant_id' => 'required|exists:product_variants,id',
+	        'quantity' => 'required|integer|min:1',
+            'selected_shipping' => 'nullable|string',
+	    ]);
+	
+	    $added = $this->cartService->addItem(
+	        $request->variant_id,
+	        $request->quantity
+	    );
 
-    $request->validate([
-        'variant_id' => 'required|exists:product_variants,id',
-        'quantity' => 'required|integer|min:1',
-    ]);
-
-    $added = $this->cartService->addItem(
-        $request->variant_id,
-        $request->quantity
-    );
+        if ($added && $request->filled('selected_shipping')) {
+            $shippingData = json_decode($request->selected_shipping, true);
+            if ($shippingData) {
+                $this->cartService->setShipping($shippingData);
+            }
+        }
 
     if (!$added) {
         // Se entrar aqui, é porque o CartService retornou false (provavelmente sem estoque)

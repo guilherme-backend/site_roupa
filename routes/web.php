@@ -25,6 +25,9 @@ Route::get('/categoria/{slug}', [ShopController::class, 'category'])->name('shop
 // Rota de Detalhes do Produto
 Route::get('/produto/{slug}', [ShopController::class, 'show'])->name('shop.show');
 
+// Cálculo de Frete Público
+Route::post('/frete/calcular', [ShippingController::class, 'calculate'])->name('shipping.calculate');
+
 
 // --- Rotas do Carrinho ---
 Route::prefix('carrinho')->group(function () {

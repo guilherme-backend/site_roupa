@@ -78,6 +78,33 @@
                     </div>
                 </div>
 
+                <!-- Calculo de Frete -->
+                <div class="mt-10 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Calcular Frete</h3>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="cepInput" placeholder="Digite seu CEP (ex: 01001-000)" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" maxlength="9">
+                        <button type="button" id="calcularFreteBtn" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition whitespace-nowrap">
+                            Calcular
+                        </button>
+                    </div>
+                    
+                    <div id="freteResult" class="mt-4 hidden">
+                        <div class="space-y-2" id="freteOptions"></div>
+                    </div>
+                    
+                    <div id="freteLoading" class="mt-4 hidden text-center">
+                        <div class="inline-flex items-center">
+                            <svg class="animate-spin h-5 w-5 text-indigo-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-gray-600">Calculando frete...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="freteError" class="mt-4 hidden p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg"></div>
+                </div>
+
                 <form class="mt-10" action="{{ route('cart.add', $product->id) }}" method="POST">
                     @csrf
 
@@ -133,6 +160,9 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- Campo oculto para armazenar frete selecionado -->
+                    <input type="hidden" id="selectedShipping" name="selected_shipping" value="">
 
                     <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                         <div class="flex items-center border-2 border-gray-200 rounded-xl px-2">
@@ -205,4 +235,105 @@
         @endif
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cepInput = document.getElementById('cepInput');
+    const calcularFreteBtn = document.getElementById('calcularFreteBtn');
+    const freteResult = document.getElementById('freteResult');
+    const freteLoading = document.getElementById('freteLoading');
+    const freteError = document.getElementById('freteError');
+    const freteOptions = document.getElementById('freteOptions');
+    const selectedShipping = document.getElementById('selectedShipping');
+
+    // Formatar CEP enquanto digita
+    cepInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 5) {
+            value = value.slice(0, 5) + '-' + value.slice(5, 8);
+        }
+        e.target.value = value;
+    });
+
+    // Calcular frete
+    calcularFreteBtn.addEventListener('click', async function() {
+        const cep = cepInput.value.replace(/\D/g, '');
+        
+        if (cep.length < 8) {
+            freteError.textContent = 'Por favor, digite um CEP válido';
+            freteError.classList.remove('hidden');
+            freteResult.classList.add('hidden');
+            return;
+        }
+
+        freteError.classList.add('hidden');
+        freteLoading.classList.remove('hidden');
+        freteResult.classList.add('hidden');
+
+        try {
+            const response = await fetch('{{ route("shipping.calculate") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ zipcode: cepInput.value })
+            });
+
+            const data = await response.json();
+            freteLoading.classList.add('hidden');
+
+            if (data.success && data.options.length > 0) {
+                freteOptions.innerHTML = '';
+                data.options.forEach((option, index) => {
+                    const html = `
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-600 cursor-pointer transition">
+                            <input type="radio" name="shipping_option" value="${option.code}" class="shipping-option" data-price="${option.price}" ${index === 0 ? 'checked' : ''}>
+                            <div class="ml-3 flex-1">
+                                <div class="font-semibold text-gray-900">${option.name}</div>
+                                <div class="text-sm text-gray-500">Entrega em ${option.deadline} dias úteis</div>
+                            </div>
+                            <div class="font-bold text-indigo-600">R$ ${parseFloat(option.price).toFixed(2).replace('.', ',')}</div>
+                        </label>
+                    `;
+                    freteOptions.innerHTML += html;
+                });
+
+                // Adicionar listeners aos radio buttons
+                document.querySelectorAll('.shipping-option').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        selectedShipping.value = JSON.stringify({
+                            code: this.value,
+                            price: parseFloat(this.dataset.price)
+                        });
+                    });
+                });
+
+                // Selecionar primeira opção por padrão
+                if (document.querySelector('.shipping-option')) {
+                    const firstOption = document.querySelector('.shipping-option');
+                    firstOption.checked = true;
+                    firstOption.dispatchEvent(new Event('change'));
+                }
+
+                freteResult.classList.remove('hidden');
+            } else {
+                freteError.textContent = 'Não foi possível calcular o frete para este CEP';
+                freteError.classList.remove('hidden');
+            }
+        } catch (error) {
+            freteLoading.classList.add('hidden');
+            freteError.textContent = 'Erro ao calcular frete. Tente novamente.';
+            freteError.classList.remove('hidden');
+        }
+    });
+
+    // Permitir calcular ao pressionar Enter
+    cepInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            calcularFreteBtn.click();
+        }
+    });
+});
+</script>
 @endsection

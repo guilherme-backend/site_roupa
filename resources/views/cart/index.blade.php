@@ -93,11 +93,15 @@
                     <div class="space-y-4">
                         <div class="flex justify-between text-gray-600">
                             <span>Subtotal</span>
-                            <span class="font-bold text-gray-900">R$ {{ number_format($total, 2, ',', '.') }}</span>
+                            <span class="font-bold text-gray-900">R$ {{ number_format($subtotal, 2, ',', '.') }}</span>
                         </div>
                         <div class="flex justify-between text-gray-600">
-                            <span>Frete Estimado</span>
-                            <span class="text-green-600 font-bold">Grátis</span>
+                            <span>Frete</span>
+                            @if(isset($shipping) && $shipping['price'] > 0)
+                                <span class="font-bold text-gray-900">R$ {{ number_format($shipping['price'], 2, ',', '.') }}</span>
+                            @else
+                                <span class="text-green-600 font-bold">Grátis</span>
+                            @endif
                         </div>
                         <div class="pt-4 border-t border-gray-100 flex justify-between items-end">
                             <span class="text-lg font-bold text-gray-900">Total</span>

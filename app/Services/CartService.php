@@ -8,10 +8,26 @@ use Illuminate\Support\Facades\Session;
 class CartService
 {
     const CART_SESSION_KEY = 'shopping_cart';
+    const SHIPPING_SESSION_KEY = 'selected_shipping';
 
     public function getCart(): array
     {
         return Session::get(self::CART_SESSION_KEY, []);
+    }
+
+    public function setShipping(array $shippingData): void
+    {
+        Session::put(self::SHIPPING_SESSION_KEY, $shippingData);
+    }
+
+    public function getShipping(): ?array
+    {
+        return Session::get(self::SHIPPING_SESSION_KEY);
+    }
+
+    public function clearShipping(): void
+    {
+        Session::forget(self::SHIPPING_SESSION_KEY);
     }
 
     public function addItem(int $variantId, int $quantity = 1): bool
@@ -79,9 +95,27 @@ class CartService
     public function clear(): void
     {
         Session::forget(self::CART_SESSION_KEY);
+        $this->clearShipping();
     }
 
     public function getTotal(): float
+    {
+        $cart = $this->getCart();
+        $total = 0;
+
+        foreach ($cart as $item) {
+            $total += $item['price'] * $item['quantity'];
+        }
+
+        $shipping = $this->getShipping();
+        if ($shipping && isset($shipping['price'])) {
+            $total += (float) $shipping['price'];
+        }
+
+        return $total;
+    }
+
+    public function getSubtotal(): float
     {
         $cart = $this->getCart();
         $total = 0;

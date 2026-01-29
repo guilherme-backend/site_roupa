@@ -107,20 +107,20 @@
                         @endforeach
                     </div>
 
-                    <div class="space-y-4 border-t border-white/10 pt-6">
-                        <div class="flex justify-between text-white/70">
-                            <span>Subtotal</span>
-                            <span>R$ {{ number_format($total, 2, ',', '.') }}</span>
-                        </div>
-                        <div class="flex justify-between text-white/70">
-                            <span>Frete</span>
-                            <span id="display-shipping">R$ 0,00</span>
-                        </div>
-                        <div class="flex justify-between text-xl font-bold pt-4 border-t border-white/20">
-                            <span>Total</span>
-                            <span id="display-total" data-base="{{ $total }}">R$ {{ number_format($total, 2, ',', '.') }}</span>
-                        </div>
-                    </div>
+	                    <div class="space-y-4 border-t border-white/10 pt-6">
+	                        <div class="flex justify-between text-white/70">
+	                            <span>Subtotal</span>
+	                            <span>R$ {{ number_format($subtotal, 2, ',', '.') }}</span>
+	                        </div>
+	                        <div class="flex justify-between text-white/70">
+	                            <span>Frete</span>
+	                            <span id="display-shipping">R$ {{ number_format($shipping['price'] ?? 0, 2, ',', '.') }}</span>
+	                        </div>
+	                        <div class="flex justify-between text-xl font-bold pt-4 border-t border-white/20">
+	                            <span>Total</span>
+	                            <span id="display-total" data-base="{{ $subtotal }}">R$ {{ number_format($total, 2, ',', '.') }}</span>
+	                        </div>
+	                    </div>
 
                     <button type="submit" id="submit-btn" class="w-full mt-8 bg-white text-black py-5 rounded-2xl font-bold text-lg hover:bg-gray-100 transition shadow-xl flex items-center justify-center gap-2">
                         Pagar com Mercado Pago

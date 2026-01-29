@@ -16,13 +16,15 @@ class CheckoutController extends Controller
     public function index(CartService $cartService)
     {
         $cart = $cartService->getCart();
+        $subtotal = $cartService->getSubtotal();
+        $shipping = $cartService->getShipping();
         $total = $cartService->getTotal();
 
         if (empty($cart)) {
             return redirect()->route('shop.index');
         }
 
-        return view('checkout.index', compact('cart', 'total'));
+        return view('checkout.index', compact('cart', 'subtotal', 'shipping', 'total'));
     }
 
     public function process(Request $request, CartService $cartService, PaymentService $paymentService)
@@ -39,10 +41,11 @@ class CheckoutController extends Controller
 
         $address = \App\Models\UserAddress::find($validated['address_id']);
         $cart = $cartService->getCart();
-        $subtotal = $cartService->getTotal();
+        $subtotal = $cartService->getSubtotal();
+        $shipping = $cartService->getShipping();
         
-        // Simula o custo de frete baseado no método (em produção viria do serviço)
-        $shippingCost = $validated['shipping_method'] === '04014' ? 25.50 : 15.90;
+        // Usa o frete da sessão se disponível, caso contrário usa o padrão do método selecionado
+        $shippingCost = $shipping['price'] ?? ($validated['shipping_method'] === '04014' ? 25.50 : 15.90);
         $total = $subtotal + $shippingCost;
 
         if (empty($cart)) {
