@@ -73,8 +73,8 @@
 
                 <div class="mt-8">
                     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Descrição</h3>
-                    <div class="mt-4 text-base text-gray-600 leading-relaxed">
-                        {{ $product->description }}
+                    <div class="mt-4 text-base text-gray-600 leading-relaxed prose prose-indigo max-w-none">
+                        {!! $product->description !!}
                     </div>
                 </div>
 
