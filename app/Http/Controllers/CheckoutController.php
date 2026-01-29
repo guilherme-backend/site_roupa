@@ -44,8 +44,8 @@ class CheckoutController extends Controller
         $subtotal = $cartService->getSubtotal();
         $shipping = $cartService->getShipping();
         
-        // Usa o frete da sessão se disponível, caso contrário usa o padrão do método selecionado
-        $shippingCost = $shipping['price'] ?? ($validated['shipping_method'] === '04014' ? 25.50 : 15.90);
+        // Usa o frete enviado pelo formulário, ou da sessão, ou padrão
+        $shippingCost = $request->input('shipping_price') ?? $shipping['price'] ?? ($validated['shipping_method'] === '04014' ? 25.50 : 15.90);
         $total = $subtotal + $shippingCost;
 
         if (empty($cart)) {

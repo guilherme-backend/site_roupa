@@ -14,7 +14,7 @@ class ShippingController extends Controller
             'zipcode' => 'required|string',
         ]);
 
-        $originZip = '01001-000'; // CEP da sua loja (Exemplo: São Paulo)
+        $originZip = '26600-000'; // CEP da sua loja (Paracambi - RJ)
         $destZip = $request->zipcode;
 
         $options = $correiosService->calculateShipping($originZip, $destZip);

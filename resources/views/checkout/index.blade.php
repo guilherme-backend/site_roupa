@@ -4,9 +4,11 @@
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-10 text-center lg:text-left">Finalizar Compra</h1>
 
-    <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form">
-        @csrf
-        <div class="lg:grid lg:grid-cols-12 lg:gap-x-12">
+	    <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form">
+	        @csrf
+            <!-- Campo oculto para o frete da sessão -->
+            <input type="hidden" name="shipping_price" id="shipping_price" value="{{ $shipping['price'] ?? 0 }}">
+	        <div class="lg:grid lg:grid-cols-12 lg:gap-x-12">
             
             <!-- Coluna da Esquerda: Endereço e Dados -->
             <div class="lg:col-span-7 space-y-8">
@@ -173,14 +175,15 @@
         });
     }
 
-    function updateTotal(radio) {
-        const price = parseFloat(radio.dataset.price);
-        const baseTotal = parseFloat(document.getElementById('display-total').dataset.base);
-        const finalTotal = baseTotal + price;
-
-        document.getElementById('display-shipping').innerText = `R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        document.getElementById('display-total').innerText = `R$ ${finalTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    }
+	    function updateTotal(radio) {
+	        const price = parseFloat(radio.dataset.price);
+            document.getElementById('shipping_price').value = price;
+	        const baseTotal = parseFloat(document.getElementById('display-total').dataset.base);
+	        const finalTotal = baseTotal + price;
+	
+	        document.getElementById('display-shipping').innerText = `R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+	        document.getElementById('display-total').innerText = `R$ ${finalTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+	    }
 
     // Calcula frete inicial se houver endereço padrão
     window.onload = () => {
