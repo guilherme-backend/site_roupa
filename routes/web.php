@@ -18,6 +18,9 @@ use App\Http\Controllers\ShippingController;
 
 // --- Rotas Públicas da Loja ---
 Route::get('/', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/dashboard', function () {
+    return redirect()->route('shop.index');
+})->name('dashboard');
 
 // Rota de Categoria (A QUE ESTAVA FALTANDO)
 Route::get('/categoria/{slug}', [ShopController::class, 'category'])->name('shop.category');
