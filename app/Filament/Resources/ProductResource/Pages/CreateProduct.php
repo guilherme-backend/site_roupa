@@ -12,16 +12,25 @@ class CreateProduct extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Garante que stock_quantity e sizes sejam tratados corretamente
-        $data['stock_quantity'] = isset($data['stock_quantity']) ? (int) $data['stock_quantity'] : 0;
-        $data['sizes'] = $data['sizes'] ?? [];
+        // Guardamos temporariamente os dados virtuais
+        $this->stock_data = [
+            'stock_quantity' => isset($data['stock_quantity']) ? (int) $data['stock_quantity'] : 0,
+            'sizes' => $data['sizes'] ?? []
+        ];
+
+        // Remove os campos que não existem na tabela 'products'
+        unset($data['stock_quantity']);
+        unset($data['sizes']);
         
         return $data;
     }
 
     protected function afterCreate(): void
     {
-        // Sincroniza o estoque com as variantes após criar
+        // Atribui os dados guardados ao registro criado e sincroniza
+        $this->record->stock_quantity = $this->stock_data['stock_quantity'];
+        $this->record->sizes = $this->stock_data['sizes'];
+        
         $this->record->syncSimpleStockAndSizes();
     }
 }
