@@ -35,6 +35,11 @@ class ProductVariant extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function getNameAttribute()
+    {
+        return "{$this->size}";
+    }
+
     public function getFinalPriceAttribute()
     {
         return $this->product->base_price + $this->price_adjustment;

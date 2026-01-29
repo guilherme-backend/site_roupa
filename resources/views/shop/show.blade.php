@@ -65,6 +65,8 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-2">Esgotado</span>
                         @elseif($totalStock <= 5)
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-2">Últimas {{ $totalStock }} unidades!</span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">Em Estoque</span>
                         @endif
                     </div>
                 </div>
@@ -88,14 +90,46 @@
 
                             <div class="grid grid-cols-4 gap-3 mt-4">
                                 @foreach($product->variants as $variant)
-                                    <label class="group relative border-2 rounded-xl py-3 px-3 flex items-center justify-center text-sm font-bold uppercase cursor-pointer transition-all {{ $variant->stock_quantity == 0 ? 'opacity-30 cursor-not-allowed bg-gray-50 border-gray-100' : 'bg-white border-gray-200 hover:border-indigo-600 text-gray-900' }}">
+                                    <label class="group relative border-2 rounded-xl py-3 px-3 flex flex-col items-center justify-center text-sm font-bold uppercase cursor-pointer transition-all {{ $variant->stock_quantity == 0 ? 'opacity-30 cursor-not-allowed bg-gray-50 border-gray-100' : 'bg-white border-gray-200 hover:border-indigo-600 text-gray-900' }}">
                                         <input type="radio" name="variant_id" value="{{ $variant->id }}" class="sr-only" {{ $variant->stock_quantity == 0 ? 'disabled' : '' }} required>
-                                        <span>{{ $variant->name }}</span>
+                                        <span>{{ $variant->size }}</span>
+                                        <span class="text-xs font-normal mt-1 {{ $variant->stock_quantity == 0 ? 'text-red-600' : 'text-gray-500' }}">
+                                            {{ $variant->stock_quantity > 0 ? $variant->stock_quantity . ' un.' : 'Sem estoque' }}
+                                        </span>
                                         @if($variant->stock_quantity > 0)
                                             <div class="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-indigo-600 pointer-events-none"></div>
                                         @endif
                                     </label>
                                 @endforeach
+                            </div>
+
+                            <!-- Tabela de Estoque por Tamanho -->
+                            <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Disponibilidade por Tamanho</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    @foreach($product->variants as $variant)
+                                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                            <div class="text-xs font-bold text-gray-600 uppercase">{{ $variant->size }}</div>
+                                            <div class="mt-2 flex items-center justify-between">
+                                                <span class="text-sm font-bold {{ $variant->stock_quantity > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                    {{ $variant->stock_quantity }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    @if($variant->stock_quantity == 0)
+                                                        Esgotado
+                                                    @elseif($variant->stock_quantity <= 3)
+                                                        Últimas
+                                                    @else
+                                                        Disponível
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                                <div class="bg-indigo-600 h-2 rounded-full transition-all" style="width: {{ min(100, ($variant->stock_quantity / 10) * 100) }}%"></div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     @endif

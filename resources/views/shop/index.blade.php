@@ -18,7 +18,7 @@
                     </p>
                     <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                         <div class="rounded-md shadow">
-                            <a href="#produtos" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                            <a href="#categorias" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
                                 Ver Coleção
                             </a>
                         </div>
@@ -38,35 +38,50 @@
     </div>
 </div>
 
-<!-- Categorias Rápidas -->
-<div class="bg-white py-12">
+<!-- Categorias Rápidas (Dinâmicas) -->
+@if(isset($categories) && $categories->count() > 0)
+<div id="categorias" class="bg-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-extrabold text-gray-900 mb-8 tracking-tight">Navegue por Categoria</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="#" class="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
-                <div class="absolute inset-0 flex items-center justify-center font-bold text-gray-800 group-hover:scale-110 transition duration-300">Masculino</div>
-            </a>
-            <a href="#" class="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
-                <div class="absolute inset-0 flex items-center justify-center font-bold text-gray-800 group-hover:scale-110 transition duration-300">Feminino</div>
-            </a>
-            <a href="#" class="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
-                <div class="absolute inset-0 flex items-center justify-center font-bold text-gray-800 group-hover:scale-110 transition duration-300">Acessórios</div>
-            </a>
-            <a href="#" class="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
-                <div class="absolute inset-0 flex items-center justify-center font-bold text-gray-800 group-hover:scale-110 transition duration-300">Calçados</div>
-            </a>
+            @foreach($categories as $cat)
+                <a href="{{ route('shop.category', $cat->slug) }}" class="group relative rounded-xl overflow-hidden aspect-square bg-gradient-to-br from-indigo-50 to-indigo-100 hover:shadow-lg transition-all duration-300">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="font-bold text-gray-800 group-hover:scale-110 transition duration-300 text-lg">{{ $cat->name }}</div>
+                            <div class="text-xs text-gray-600 mt-1">Explorar</div>
+                        </div>
+                    </div>
+                </a>
+            @endforeach
         </div>
     </div>
 </div>
+@endif
 
 <!-- Lista de Produtos -->
 <div id="produtos" class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-end justify-between mb-10">
             <div>
-                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Destaques da Semana</h2>
-                <p class="mt-2 text-gray-500">Confira o que há de mais novo em nossa loja.</p>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                    @if(isset($category))
+                        {{ $category->name }}
+                    @else
+                        Destaques da Semana
+                    @endif
+                </h2>
+                <p class="mt-2 text-gray-500">
+                    @if(isset($category))
+                        Confira todos os produtos da categoria {{ $category->name }}.
+                    @else
+                        Confira o que há de mais novo em nossa loja.
+                    @endif
+                </p>
             </div>
-            <a href="#" class="text-indigo-600 font-semibold hover:text-indigo-500 transition">Ver tudo &rarr;</a>
+            @if(!isset($category))
+                <a href="#" class="text-indigo-600 font-semibold hover:text-indigo-500 transition">Ver tudo &rarr;</a>
+            @endif
         </div>
 
         @if(isset($products) && $products->count() > 0)
@@ -81,6 +96,29 @@
                                     <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 </div>
                             @endif
+                            
+                            <!-- Indicador de Estoque -->
+                            @php $totalStock = $product->total_stock; @endphp
+                            @if($totalStock > 0)
+                                <div class="absolute top-4 left-4">
+                                    @if($totalStock <= 5)
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
+                                            Últimas {{ $totalStock }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                            Em Estoque
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="absolute top-4 left-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                                        Esgotado
+                                    </span>
+                                </div>
+                            @endif
+                            
                             <div class="absolute bottom-4 right-4 translate-y-12 group-hover:translate-y-0 transition-transform duration-300">
                                 <button class="bg-white p-3 rounded-full shadow-xl text-indigo-600 hover:bg-indigo-600 hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -102,6 +140,13 @@
                     </div>
                 @endforeach
             </div>
+            
+            <!-- Paginação -->
+            @if($products->hasPages())
+                <div class="mt-12 flex justify-center">
+                    {{ $products->links() }}
+                </div>
+            @endif
         @else
             <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 mb-4">
@@ -111,7 +156,7 @@
                 <p class="mt-2 text-gray-500">Estamos preparando as melhores peças para você. Volte em breve!</p>
                 <div class="mt-6">
                     <a href="{{ route('shop.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                        Atualizar página
+                        Voltar à Loja
                     </a>
                 </div>
             </div>
